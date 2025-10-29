@@ -136,7 +136,7 @@ public:
     //! margin for projection matcher
     float margin_local_map_projection_ = 5.0;
     float margin_local_map_projection_unstable_ = 20.0;
-
+    module::relocalizer* get_relocalizer() { return &relocalizer_; }
     //-----------------------------------------
     // variables
 

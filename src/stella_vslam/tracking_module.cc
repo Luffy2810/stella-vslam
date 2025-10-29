@@ -333,7 +333,19 @@ bool tracking_module::initialize() {
 bool tracking_module::track_current_frame() {
     bool succeeded = false;
 
-    // Tracking mode
+        spdlog::info("Low FPS detected ({:.3f}s gap), using P3P tracking", 
+                     curr_frm_.timestamp_ - last_frm_.timestamp_);
+        succeeded = frame_tracker_.p3p_track_with_ref_keyframe(
+            curr_frm_, 
+            curr_frm_.ref_keyfrm_, 
+            &relocalizer_
+        );
+        if (succeeded) {
+            return true;
+        }
+        spdlog::warn("P3P tracking failed, trying standard methods");
+
+    // Strategy 2: Normal FPS - Standard tracking cascade
     if (twist_is_valid_) {
         // if the motion model is valid
         succeeded = frame_tracker_.motion_based_track(curr_frm_, last_frm_, twist_);

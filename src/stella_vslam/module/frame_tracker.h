@@ -19,6 +19,7 @@ class bow_database;
 } // namespace data
 
 namespace module {
+class relocalizer;
 
 class frame_tracker {
 public:
@@ -33,6 +34,10 @@ public:
     bool bow_match_based_track(data::frame& curr_frm, const data::frame& last_frm, const std::shared_ptr<data::keyframe>& ref_keyfrm) const;
 
     bool robust_match_based_track(data::frame& curr_frm, const data::frame& last_frm, const std::shared_ptr<data::keyframe>& ref_keyfrm) const;
+
+    bool p3p_track_with_ref_keyframe(data::frame& curr_frm,
+                                    const std::shared_ptr<data::keyframe>& ref_keyfrm,
+                                    module::relocalizer* relocalizer) const;
 
 private:
     unsigned int discard_outliers(const std::vector<bool>& outlier_flags, data::frame& curr_frm) const;

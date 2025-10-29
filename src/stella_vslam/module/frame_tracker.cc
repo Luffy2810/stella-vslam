@@ -10,6 +10,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "stella_vslam/module/relocalizer.h"
+
 namespace stella_vslam {
 namespace module {
 
@@ -128,6 +130,44 @@ bool frame_tracker::robust_match_based_track(data::frame& curr_frm, const data::
     else {
         return true;
     }
+}
+
+bool frame_tracker::p3p_track_with_ref_keyframe(
+    data::frame& curr_frm,
+    const std::shared_ptr<data::keyframe>& ref_keyfrm,
+    module::relocalizer* relocalizer) const {
+    
+    if (!ref_keyfrm) {
+        spdlog::warn("p3p_track: ref_keyfrm is null");
+        return false;
+    }
+    
+    if (ref_keyfrm->will_be_erased()) {
+        spdlog::warn("p3p_track: ref_keyfrm will be erased");
+        return false;
+    }
+    
+    spdlog::debug("P3P tracking with reference keyframe {}", ref_keyfrm->id_);
+    
+    // Use only the reference keyframe for P3P tracking
+    std::vector<std::shared_ptr<data::keyframe>> candidates = {ref_keyfrm};
+    
+    // Use the relocalizer's P3P pipeline:
+    // robust matching → EPnP+RANSAC → optimization → refinement
+    bool success = relocalizer->reloc_by_candidates(
+        curr_frm, 
+        candidates,
+        true  // use_robust_matcher
+    );
+    
+    if (success) {
+        spdlog::info("P3P tracking succeeded (frame={}, ref_keyframe={})", 
+                     curr_frm.id_, ref_keyfrm->id_);
+    } else {
+        spdlog::debug("P3P tracking failed for frame {}", curr_frm.id_);
+    }
+    
+    return success;
 }
 
 unsigned int frame_tracker::discard_outliers(const std::vector<bool>& outlier_flags, data::frame& curr_frm) const {
